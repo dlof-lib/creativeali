@@ -14,7 +14,7 @@ import java.util.zip.Inflater
  * تشفير حزم/ملفات DLoF بصيغة "Best64" — متوافق مع بنية الملف المشفر في
  * تطبيق DLoF المرجعي (org.dlof.reader.lighthouse.CryptoHelper):
  *
- *   [magic "DLOF" (4B)] [version (1B)] [salt (16B)] [iv (12B)] [ciphertext...]
+ *   magic "DLOF" (4B) ثم version (1B) ثم salt (16B) ثم iv (12B) ثم ciphertext...
  *
  * الخوارزمية: AES-256-GCM، اشتقاق المفتاح عبر PBKDF2-HmacSHA256 (310,000 تكرار
  * افتراضيًا، أو ضِعفها كبديل مبسّط لـ Argon2id إن لم تتوفر مكتبة خارجية).
