@@ -67,6 +67,13 @@ dependencies {
     // ViewModel + lifecycle-aware state collection
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
+
+    // Ads (AdMob)
+    implementation("com.google.android.gms:play-services-ads:23.2.0")
+
+    // Unit tests
+    testImplementation("junit:junit:4.13.2")
 }
