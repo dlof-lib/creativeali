@@ -1,0 +1,18 @@
+# Creative Ali — set.txt
+# Bundled inside every exported .dlofpkg to describe its contents.
+# Lines starting with # are comments; everything else is key=value.
+
+package.type=dlofpkg
+package.name=
+package.id=
+package.entries=0
+package.closedLoop=false
+package.createdBy=Creative Ali
+package.format.version=1.0
+
+# Diagram packages add these keys instead of the blog keys above:
+# package.type=diagrampkg
+# diagram.name=
+# diagram.elementCount=0
+# diagram.fonts=            # comma-separated font asset names used
+# diagram.icons=            # comma-separated icon asset names used
