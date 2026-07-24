@@ -3,6 +3,7 @@ package com.creativeali.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
@@ -52,10 +53,11 @@ fun CreativeAliRoot() {
             }
         }
     ) { padding ->
-        Modifier.padding(padding) // reserved for shared padding if content needs it
-        when (tab) {
-            0 -> ContainerListScreen()
-            else -> DlofExplorerScreen()
+        Box(Modifier.padding(padding)) {
+            when (tab) {
+                0 -> ContainerListScreen()
+                else -> DlofExplorerScreen()
+            }
         }
     }
 }
