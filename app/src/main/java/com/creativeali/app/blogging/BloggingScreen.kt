@@ -12,16 +12,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.creativeali.app.R
+import java.text.DateFormat
+import java.util.Date
 import kotlinx.coroutines.launch
 
 /**
@@ -32,15 +38,22 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BloggingScreen(viewModel: BloggingViewModel = viewModel()) {
+fun BloggingScreen(loopId: String = com.creativeali.app.blogging.data.DEFAULT_LOOP_ID) {
+    val context = LocalContext.current
+    val application = context.applicationContext as android.app.Application
+    val viewModel: BloggingViewModel = viewModel(
+        factory = BloggingViewModel.Factory(application, loopId),
+        key = "blogging-$loopId",
+    )
     val loop by viewModel.loop.collectAsStateWithLifecycle()
     var editingId by remember { mutableStateOf<String?>(null) }
     var creatingNew by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    var pendingDeleteId by remember { mutableStateOf<String?>(null) }
 
     val editingEntry = if (creatingNew) DlofEntry() else loop.entries.firstOrNull { it.id == editingId }
 
     if (editingEntry == null) {
-        val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
             uri ?: return@rememberLauncherForActivityResult
@@ -56,6 +69,14 @@ fun BloggingScreen(viewModel: BloggingViewModel = viewModel()) {
                 }
             }
         }
+
+        val filtered = remember(loop.entries, query) {
+            if (query.isBlank()) loop.entries
+            else loop.entries.filter {
+                it.title.contains(query, ignoreCase = true) || it.body.contains(query, ignoreCase = true)
+            }
+        }
+        val dateFormat = remember { DateFormat.getDateInstance(DateFormat.MEDIUM) }
 
         Scaffold(
             topBar = {
@@ -74,16 +95,69 @@ fun BloggingScreen(viewModel: BloggingViewModel = viewModel()) {
                 }
             }
         ) { padding ->
-            LazyColumn(Modifier.fillMaxSize().padding(padding)) {
-                items(loop.entries, key = { it.id }) { entry ->
-                    ListItem(
-                        headlineContent = { Text(entry.title.ifBlank { "(بدون عنوان)" }) },
-                        supportingContent = { Text(entry.body.take(80)) },
-                        modifier = Modifier.clickable { editingId = entry.id }
-                    )
-                    HorizontalDivider()
+            Column(Modifier.fillMaxSize().padding(padding)) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    placeholder = { Text(stringResource(R.string.blogging_search_hint)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (query.isNotEmpty()) {
+                            IconButton(onClick = { query = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
+                            }
+                        }
+                    },
+                    singleLine = true
+                )
+
+                when {
+                    loop.entries.isEmpty() -> EmptyState(stringResource(R.string.blogging_empty_state))
+                    filtered.isEmpty() -> EmptyState(stringResource(R.string.blogging_no_results))
+                    else -> LazyColumn(Modifier.fillMaxSize()) {
+                        items(filtered, key = { it.id }) { entry ->
+                            ListItem(
+                                headlineContent = { Text(entry.title.ifBlank { "(بدون عنوان)" }) },
+                                supportingContent = {
+                                    Column {
+                                        Text(dateFormat.format(Date(entry.createdAt)), style = MaterialTheme.typography.labelSmall)
+                                        Text(entry.body.take(80), maxLines = 2)
+                                    }
+                                },
+                                trailingContent = {
+                                    IconButton(onClick = { pendingDeleteId = entry.id }) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = stringResource(R.string.blogging_delete_entry),
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.clickable { editingId = entry.id }
+                            )
+                            HorizontalDivider()
+                        }
+                    }
                 }
             }
+        }
+
+        if (pendingDeleteId != null) {
+            AlertDialog(
+                onDismissRequest = { pendingDeleteId = null },
+                title = { Text(stringResource(R.string.blogging_delete_confirm_title)) },
+                text = { Text(stringResource(R.string.blogging_delete_confirm_body)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.delete(pendingDeleteId!!)
+                        pendingDeleteId = null
+                    }) { Text(stringResource(R.string.delete)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { pendingDeleteId = null }) { Text(stringResource(R.string.cancel)) }
+                }
+            )
         }
     } else {
         EntryEditor(
@@ -95,6 +169,13 @@ fun BloggingScreen(viewModel: BloggingViewModel = viewModel()) {
             },
             onCancel = { editingId = null; creatingNew = false }
         )
+    }
+}
+
+@Composable
+private fun EmptyState(message: String) {
+    Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+        Text(message, style = MaterialTheme.typography.bodyMedium, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
     }
 }
 
@@ -146,7 +227,25 @@ private fun EntryEditor(entry: DlofEntry, onSave: (DlofEntry) -> Unit, onCancel:
             )
             if (mediaRefs.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
-                Text("مرفقات: ${mediaRefs.size}", style = MaterialTheme.typography.labelMedium)
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    mediaRefs.forEachIndexed { index, ref ->
+                        InputChip(
+                            selected = false,
+                            onClick = {},
+                            label = { Text(ref.substringAfterLast('/').take(24)) },
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = stringResource(R.string.blogging_remove_attachment),
+                                    modifier = Modifier.clickable { mediaRefs.removeAt(index) }
+                                )
+                            }
+                        )
+                    }
+                }
             }
         }
     }
