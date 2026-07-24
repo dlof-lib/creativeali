@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Creative Ali</string>
+
+    <string name="tab_blogging">التدوين</string>
+    <string name="tab_diagrams">المخططات</string>
+    <string name="tab_dlof">مستكشف DLoF</string>
+    <string name="tab_containers">حاوية DLoF</string>
+
+    <string name="container_list_title">حاوية DLoF</string>
+    <string name="container_list_empty">لا توجد حاويات بعد. اضغط + لإنشاء أول حاوية.</string>
+    <string name="container_new">إنشاء حاوية</string>
+    <string name="container_name_hint">اسم الحاوية</string>
+    <string name="container_description_hint">الوصف</string>
+    <string name="container_details_hint">تفاصيل إضافية (مهمة أو غير مهمة)</string>
+    <string name="container_icon_pick">اختيار أيقونة</string>
+    <string name="container_icon_default">أيقونة افتراضية</string>
+    <string name="container_badges_title">الوسامات</string>
+    <string name="container_badge_add">إضافة وسام</string>
+    <string name="container_badge_name_hint">اسم الوسام</string>
+    <string name="container_badge_example_hint">وصف/مثال</string>
+    <string name="container_badge_svg_hint">أيقونة SVG (اختياري)</string>
+    <string name="container_allow_settxt">السماح بملف ضبط تشغيل خاص (set.txt)</string>
+    <string name="container_license_optional">إرفاق ترخيص خاص بـ .dlof/.dlofpkg (اختياري)</string>
+    <string name="container_license_hint">نص الترخيص</string>
+    <string name="container_step_next">التالي</string>
+    <string name="container_step_back">السابق</string>
+    <string name="container_step_create">إنشاء</string>
+    <string name="container_progress_creating">جاري الإنشاء…</string>
+    <string name="container_progress_preparing">جاري التجهيز…</string>
+    <string name="container_progress_badges">جاري إنشاء الوسامات…</string>
+    <string name="container_progress_uploading">جاري التحميل…</string>
+    <string name="container_progress_done">تم الإنشاء</string>
+    <string name="container_progress_opening">جاري الفتح…</string>
+    <string name="container_customize">تخصيص</string>
+    <string name="container_delete">حذف</string>
+    <string name="container_rename">إعادة تسمية</string>
+    <string name="container_edit">تعديل</string>
+    <string name="container_open_blog">المدونة / المذكرة</string>
+    <string name="container_open_diagram">المخطط / التخطيط</string>
+    <string name="container_delete_confirm_title">حذف الحاوية؟</string>
+    <string name="container_delete_confirm_body">سيتم حذف الحاوية مع المدونة والمخطط المرتبطين بها. لا يمكن التراجع.</string>
+    <string name="container_rename_title">إعادة تسمية الحاوية</string>
+    <string name="container_edit_title">تعديل تفاصيل الحاوية</string>
+
+    <string name="dlof_open_file">فتح ملف .dlof / .dlofpkg</string>
+    <string name="dlof_no_file">لم يُفتح أي ملف بعد</string>
+    <string name="dlof_encrypted_prompt">هذا الملف مشفّر — أدخل كلمة المرور</string>
+    <string name="dlof_password_hint">كلمة المرور</string>
+    <string name="dlof_decrypt">فك التشفير</string>
+    <string name="dlof_package_summary">ملخص الحزمة</string>
+    <string name="dlof_episodes">الحلقات</string>
+    <string name="dlof_backup_create">إنشاء نسخة احتياطية</string>
+    <string name="dlof_backup_restore">استعادة نسخة احتياطية</string>
+
+    <string name="blogging_new_entry">مذكرة جديدة</string>
+    <string name="blogging_title_hint">عنوان المذكرة</string>
+    <string name="blogging_body_hint">اكتب مذكرتك هنا...</string>
+    <string name="blogging_save">حفظ</string>
+    <string name="blogging_export_dlof">تصدير .dlof</string>
+    <string name="blogging_export_pkg">تصدير .dlofpkg</string>
+    <string name="blogging_search_hint">بحث في المذكرات…</string>
+    <string name="blogging_delete_entry">حذف المذكرة</string>
+    <string name="blogging_delete_confirm_title">حذف المذكرة؟</string>
+    <string name="blogging_delete_confirm_body">لا يمكن التراجع عن هذا الإجراء.</string>
+    <string name="blogging_empty_state">لا توجد مذكرات بعد. اضغط + لإضافة أول مذكرة.</string>
+    <string name="blogging_no_results">لا توجد نتائج مطابقة للبحث.</string>
+    <string name="blogging_remove_attachment">إزالة المرفق</string>
+    <string name="cancel">إلغاء</string>
+    <string name="delete">حذف</string>
+
+    <string name="diagram_new">مخطط جديد</string>
+    <string name="diagram_add_shape">إضافة شكل</string>
+    <string name="diagram_add_image">إضافة صورة</string>
+    <string name="diagram_add_video">إضافة فيديو</string>
+    <string name="diagram_add_text">إضافة نص</string>
+    <string name="diagram_border_color">لون الحافة</string>
+    <string name="diagram_fill_color">لون التعبئة</string>
+    <string name="diagram_text_color">لون النص</string>
+    <string name="diagram_corner_radius">استدارة الزوايا</string>
+    <string name="diagram_border_width">سُمك الحافة</string>
+    <string name="diagram_font_size">حجم الخط</string>
+    <string name="diagram_text_content">نص العنصر</string>
+    <string name="diagram_delete_element">حذف العنصر</string>
+    <string name="diagram_duplicate_element">تكرار العنصر</string>
+    <string name="diagram_empty_hint">اختر عنصرًا من الشريط أعلاه لإضافته، ثم المسه لتحديده وتحرير خصائصه من هنا.</string>
+    <string name="library_fonts">مكتبة الخطوط</string>
+    <string name="library_icons">مكتبة الأيقونات</string>
+</resources>
