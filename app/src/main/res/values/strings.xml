@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">Creative Ali</string>
 
+    <string name="tab_containers">الحاويات</string>
     <string name="tab_blogging">التدوين</string>
     <string name="tab_diagrams">المخططات</string>
     <string name="tab_dlof">مستكشف DLoF</string>
@@ -29,6 +30,7 @@
     <string name="blogging_empty_state">لا توجد مذكرات بعد. اضغط + لإضافة أول مذكرة.</string>
     <string name="blogging_no_results">لا توجد نتائج مطابقة للبحث.</string>
     <string name="blogging_remove_attachment">إزالة المرفق</string>
+
     <string name="cancel">إلغاء</string>
     <string name="delete">حذف</string>
 
@@ -47,6 +49,33 @@
     <string name="diagram_delete_element">حذف العنصر</string>
     <string name="diagram_duplicate_element">تكرار العنصر</string>
     <string name="diagram_empty_hint">اختر عنصرًا من الشريط أعلاه لإضافته، ثم المسه لتحديده وتحرير خصائصه من هنا.</string>
+
     <string name="library_fonts">مكتبة الخطوط</string>
     <string name="library_icons">مكتبة الأيقونات</string>
+
+    <!-- Container strings -->
+    <string name="container_new">حاوية جديدة</string>
+    <string name="container_icon_default">أيقونة افتراضية</string>
+    <string name="container_icon_pick">اختر أيقونة</string>
+    <string name="container_list_empty">لا توجد حاويات بعد. اضغط + لإنشاء حاوية جديدة.</string>
+    <string name="container_list_title">الحاويات</string>
+    <string name="container_name_hint">اسم الحاوية</string>
+    <string name="container_description_hint">وصف الحاوية</string>
+    <string name="container_step_next">التالي</string>
+    <string name="container_step_back">السابق</string>
+    <string name="container_step_create">إنشاء</string>
+    <string name="container_badges_title">الوسامات</string>
+    <string name="container_badge_add">إضافة وسام</string>
+    <string name="container_allow_settxt">السماح بملف set.txt</string>
+    <string name="container_license_optional">الترخيص (اختياري)</string>
+    <string name="container_license_hint">نص الترخيص</string>
+    <string name="container_badge_name_hint">اسم الوسام</string>
+    <string name="container_badge_example_hint">مثال على الوسام</string>
+    <string name="container_badge_svg_hint">مرجع SVG للأيقونة</string>
+    <string name="container_progress_creating">جاري الإنشاء...</string>
+    <string name="container_progress_preparing">جاري التحضير...</string>
+    <string name="container_progress_badges">جاري معالجة الوسامات...</string>
+    <string name="container_progress_uploading">جاري الرفع...</string>
+    <string name="container_progress_done">تم بنجاح!</string>
+    <string name="container_progress_opening">جاري الفتح...</string>
 </resources>
