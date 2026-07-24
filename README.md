@@ -1,6 +1,6 @@
 # Creative Ali
 
-تطبيق أندرويد (Kotlin + Jetpack Compose) بقسمين:
+تطبيق أندرويد (Kotlin + Jetpack Compose) بأربعة أقسام:
 
 1. **التدوين (Blogging)** — كتابة مذكرات بصيغة DLoF:
    - `.dlof` — مذكرة واحدة (عنوان + نص + وسائط)
@@ -13,6 +13,26 @@
    - تحكم كامل بلون التعبئة، لون الحافة، سُمك الحافة، استدارة الزوايا، لون النص
    - مكتبة خطوط وأيقونات قابلة للتوسّع من `assets/fonts/` و `assets/icons/`
    - الكود: `app/src/main/java/com/creativeali/app/diagrams/`
+
+3. **مستكشف DLoF (تبويب "مستكشف DLoF")** — دعم كامل لمواصفة DLoF الرسمية
+   (`https://dlof.org/schema/1.0`)، وليس فقط الشكل المبسّط القديم:
+   - قراءة/كتابة `<documentLoop>` كاملاً: metadata (كل الحقول + 19 نوع domain)،
+     loopLinks، الأنواع الستة للمحتوى (genericItem, qaItem, bookChapter,
+     termDefinition, infoExplain, episodeItem)، attachments، mediaFolder، template
+   - فتح ملفات `.dlof` مباشرة، أو حزم `.dlofpkg` (فك ضغط + فحص هيكل + عرض أول مستند)
+   - فك تشفير ملفات Best64 (AES-256-GCM) بكلمة مرور
+   - حزم القوالب القابلة للاسترداد `.dlofTemplate` (استيراد/تصدير)
+   - نظام حلقات/مسلسلات: ترقيم (عربي/لاتيني/روماني)، ربط تلقائي بين الحلقات،
+     تحقق من عدم وجود ثغرات في التسلسل
+   - الكود: `app/src/main/java/com/creativeali/app/dlof/`
+   - المخطط الرسمي الكامل ووثيقة التوافق: `spec/schema/dlof.xsd`, `spec/SPECIFICATION.md`
+
+4. **النسخ الاحتياطي والإعلانات**:
+   - نسخ احتياطي كامل للتطبيق (قاعدة البيانات + الملفات الداخلية) في أرشيف
+     `.caibak` واحد، مع تشفير AES-256-GCM اختياري — `app/.../backup/BackupManager.kt`
+   - إعلانات AdMob (بانر + بيني) بسياسة تكرار تمنع الإزعاج —
+     `app/.../ads/AdManager.kt`, `AdUnits.kt` (⚠️ استبدل معرّفات `AdUnits.Real`
+     بمعرّفاتك الفعلية قبل النشر؛ الإعدادات الحالية معرّفات اختبار Google الرسمية)
 
 أيقونة التطبيق مأخوذة من الشعار المرفق ومولّدة بكل الأحجام (`mipmap-*`).
 
