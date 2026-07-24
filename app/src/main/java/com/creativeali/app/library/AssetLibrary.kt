@@ -3,8 +3,8 @@ package com.creativeali.app.library
 import android.content.Context
 
 /**
- * Lists the bundled fonts (assets/fonts/*.ttf|*.otf) and icons
- * (assets/icons/*.svg|*.png|*.xml) so the diagram editor can offer them as a
+ * Lists the bundled fonts (assets/fonts/, *.ttf | *.otf) and icons
+ * (assets/icons/, *.svg | *.png | *.xml) so the diagram editor can offer them as a
  * picker. Drop new font/icon files straight into those asset folders — no
  * code changes needed, they show up automatically.
  */
