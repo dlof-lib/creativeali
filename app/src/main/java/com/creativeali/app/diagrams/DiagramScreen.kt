@@ -31,10 +31,15 @@ import kotlinx.coroutines.launch
  * [DiagramViewModel]; the share icon exports the diagram as `.diagrampkg`.
  */
 @Composable
-fun DiagramScreen(viewModel: DiagramViewModel = viewModel()) {
+fun DiagramScreen(diagramId: String = com.creativeali.app.diagrams.data.DEFAULT_DIAGRAM_ID) {
+    val context = LocalContext.current
+    val application = context.applicationContext as android.app.Application
+    val viewModel: DiagramViewModel = viewModel(
+        factory = DiagramViewModel.Factory(application, diagramId),
+        key = "diagram-$diagramId",
+    )
     val diagram by viewModel.diagram.collectAsStateWithLifecycle()
     var selectedId by remember { mutableStateOf<String?>(null) }
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -114,18 +119,68 @@ fun DiagramScreen(viewModel: DiagramViewModel = viewModel()) {
         // Property panel for the selected element
         if (selected != null) {
             HorizontalDivider()
-            PropertyPanel(selected) { viewModel.save(selected) }
+            PropertyPanel(
+                element = selected,
+                onChanged = { viewModel.save(selected) },
+                onDelete = {
+                    viewModel.delete(selected.id)
+                    selectedId = null
+                },
+                onDuplicate = {
+                    val copy = selected.copy(
+                        id = java.util.UUID.randomUUID().toString(),
+                        position = Offset(selected.position.x + 24f, selected.position.y + 24f)
+                    )
+                    viewModel.save(copy)
+                    selectedId = copy.id
+                }
+            )
+        } else {
+            Text(
+                stringResource(R.string.diagram_empty_hint),
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(12.dp)
+            )
         }
     }
 }
 
 @Composable
-private fun PropertyPanel(element: DiagramElement, onChanged: () -> Unit) {
+private fun PropertyPanel(
+    element: DiagramElement,
+    onChanged: () -> Unit,
+    onDelete: () -> Unit,
+    onDuplicate: () -> Unit,
+) {
     val palette = listOf(
         Color(0xFF0F5C1E), Color(0xFF1E8A2E), Color(0xFF8DC63F),
         Color(0xFFF5B300), Color.White, Color.Black, Color(0xFFE53935), Color(0xFF1565C0)
     )
     Column(Modifier.fillMaxWidth().padding(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AssistChip(onClick = onDuplicate,
+                label = { Text(stringResource(R.string.diagram_duplicate_element)) },
+                leadingIcon = { Icon(Icons.Default.ContentCopy, contentDescription = null) })
+            AssistChip(onClick = onDelete,
+                label = { Text(stringResource(R.string.diagram_delete_element)) },
+                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                colors = AssistChipDefaults.assistChipColors(labelColor = MaterialTheme.colorScheme.error))
+        }
+        Spacer(Modifier.height(8.dp))
+
+        if (element.type == ShapeType.TEXT) {
+            var text by remember(element.id) { mutableStateOf(element.text) }
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it; element.text = it; onChanged() },
+                label = { Text(stringResource(R.string.diagram_text_content)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            var fontSize by remember(element.id) { mutableStateOf(element.fontSizeSp) }
+            Text("${stringResource(R.string.diagram_font_size)}: ${fontSize.toInt()}sp")
+            Slider(value = fontSize, onValueChange = { fontSize = it; element.fontSizeSp = it; onChanged() }, valueRange = 8f..64f)
+        }
+
         Text(stringResource(R.string.diagram_fill_color), style = MaterialTheme.typography.labelMedium)
         SwatchRow(palette) { element.fillColor = it; onChanged() }
 
