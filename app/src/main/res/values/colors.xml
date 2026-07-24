@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ca_green_dark">#0F5C1E</color>
+    <color name="ca_green">#1E8A2E</color>
+    <color name="ca_lime">#8DC63F</color>
+    <color name="ca_gold">#F5B300</color>
+    <color name="ca_white">#FFFFFF</color>
+    <color name="ca_black">#000000</color>
+</resources>
