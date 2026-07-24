@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Creative Ali</string>
+
+    <string name="tab_blogging">التدوين</string>
+    <string name="tab_diagrams">المخططات</string>
+
+    <string name="blogging_new_entry">مذكرة جديدة</string>
+    <string name="blogging_title_hint">عنوان المذكرة</string>
+    <string name="blogging_body_hint">اكتب مذكرتك هنا...</string>
+    <string name="blogging_save">حفظ</string>
+    <string name="blogging_export_dlof">تصدير .dlof</string>
+    <string name="blogging_export_pkg">تصدير .dlofpkg</string>
+
+    <string name="diagram_new">مخطط جديد</string>
+    <string name="diagram_add_shape">إضافة شكل</string>
+    <string name="diagram_add_image">إضافة صورة</string>
+    <string name="diagram_add_video">إضافة فيديو</string>
+    <string name="diagram_add_text">إضافة نص</string>
+    <string name="diagram_border_color">لون الحافة</string>
+    <string name="diagram_fill_color">لون التعبئة</string>
+    <string name="diagram_text_color">لون النص</string>
+    <string name="diagram_corner_radius">استدارة الزوايا</string>
+    <string name="diagram_border_width">سُمك الحافة</string>
+    <string name="library_fonts">مكتبة الخطوط</string>
+    <string name="library_icons">مكتبة الأيقونات</string>
+</resources>
