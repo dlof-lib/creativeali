@@ -29,6 +29,7 @@ data class DiagramElement(
     var text: String = "",
     var textColor: Color = Color.White,
     var fontAsset: String? = null, // path under assets/fonts/, from FontLibrary
+    var fontSizeSp: Float = 16f,
 
     // Media
     var mediaUri: String? = null,  // content:// or file:// uri, for IMAGE/VIDEO
