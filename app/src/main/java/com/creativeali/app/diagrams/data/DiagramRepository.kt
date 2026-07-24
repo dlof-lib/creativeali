@@ -13,8 +13,8 @@ const val DEFAULT_DIAGRAM_ID = "default-diagram"
 
 class DiagramRepository(private val dao: DiagramDao) {
 
-    suspend fun ensureDefaultDiagram() =
-        dao.insertDiagramIfAbsent(DiagramEntity(id = DEFAULT_DIAGRAM_ID, name = "مخطط بدون اسم"))
+    suspend fun ensureDefaultDiagram(diagramId: String = DEFAULT_DIAGRAM_ID) =
+        dao.insertDiagramIfAbsent(DiagramEntity(id = diagramId, name = "مخطط بدون اسم"))
 
     fun observeDiagram(diagramId: String = DEFAULT_DIAGRAM_ID): Flow<Diagram> =
         dao.observeDiagram(diagramId).combine(dao.observeElements(diagramId)) { diagramEntity, elementEntities ->
