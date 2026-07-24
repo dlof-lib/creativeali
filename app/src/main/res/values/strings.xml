@@ -4,6 +4,17 @@
 
     <string name="tab_blogging">التدوين</string>
     <string name="tab_diagrams">المخططات</string>
+    <string name="tab_dlof">مستكشف DLoF</string>
+
+    <string name="dlof_open_file">فتح ملف .dlof / .dlofpkg</string>
+    <string name="dlof_no_file">لم يُفتح أي ملف بعد</string>
+    <string name="dlof_encrypted_prompt">هذا الملف مشفّر — أدخل كلمة المرور</string>
+    <string name="dlof_password_hint">كلمة المرور</string>
+    <string name="dlof_decrypt">فك التشفير</string>
+    <string name="dlof_package_summary">ملخص الحزمة</string>
+    <string name="dlof_episodes">الحلقات</string>
+    <string name="dlof_backup_create">إنشاء نسخة احتياطية</string>
+    <string name="dlof_backup_restore">استعادة نسخة احتياطية</string>
 
     <string name="blogging_new_entry">مذكرة جديدة</string>
     <string name="blogging_title_hint">عنوان المذكرة</string>
