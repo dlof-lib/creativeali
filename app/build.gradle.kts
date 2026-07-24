@@ -50,6 +50,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.compose.ui:ui-text-google-fonts")
 
     // Media (image/video pick + preview)
     implementation("androidx.activity:activity-ktx:1.9.1")
@@ -73,6 +74,9 @@ dependencies {
 
     // Ads (AdMob)
     implementation("com.google.android.gms:play-services-ads:23.2.0")
+
+    // Material Components (base XML theme, matches dlof style)
+    implementation("com.google.android.material:material:1.12.0")
 
     // Unit tests
     testImplementation("junit:junit:4.13.2")
