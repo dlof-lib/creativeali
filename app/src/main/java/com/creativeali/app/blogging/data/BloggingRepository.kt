@@ -9,7 +9,7 @@ const val DEFAULT_LOOP_ID = "default-loop"
 
 class BloggingRepository(private val dao: BloggingDao) {
 
-    suspend fun ensureDefaultLoop() = dao.ensureLoopExists(DEFAULT_LOOP_ID, "مذكراتي")
+    suspend fun ensureDefaultLoop(loopId: String = DEFAULT_LOOP_ID) = dao.ensureLoopExists(loopId, "مذكراتي")
 
     fun observeLoop(loopId: String = DEFAULT_LOOP_ID): Flow<BDlofLoop> =
         dao.observeLoop(loopId).combine(dao.observeEntries(loopId)) { loopEntity, entryEntities ->
