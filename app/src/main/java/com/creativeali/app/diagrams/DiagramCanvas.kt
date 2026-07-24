@@ -1,30 +1,43 @@
 package com.creativeali.app.diagrams
 
+import android.net.Uri
+import android.widget.VideoView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import kotlin.math.max
 
 /**
- * Free-form canvas where every [DiagramElement] can be dragged with a finger
- * and, when selected, edited through the property panel in [DiagramScreen].
+ * Free-form canvas where every [DiagramElement] can be dragged, resized
+ * (bottom-right handle) and rotated (assigned via the property panel), and
+ * when selected, edited through the property panel in [DiagramScreen].
  */
 @Composable
 fun DiagramCanvas(
@@ -32,6 +45,7 @@ fun DiagramCanvas(
     selectedId: String?,
     onSelect: (String?) -> Unit,
     onMove: (String, Offset) -> Unit,
+    onResize: (String, Offset) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -46,6 +60,7 @@ fun DiagramCanvas(
                 selected = element.id == selectedId,
                 onTap = { onSelect(element.id) },
                 onDrag = { delta -> onMove(element.id, delta) },
+                onResizeDrag = { delta -> onResize(element.id, delta) },
             )
         }
     }
@@ -57,14 +72,17 @@ private fun ElementView(
     selected: Boolean,
     onTap: () -> Unit,
     onDrag: (Offset) -> Unit,
+    onResizeDrag: (Offset) -> Unit,
 ) {
     val borderColor = if (selected) Color(0xFFF5B300) else element.borderColor
     val borderWidth = if (selected) max(element.borderWidthDp, 3f) else element.borderWidthDp
+    var showVideoDialog by remember(element.id) { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
-            .offset { androidx.compose.ui.unit.IntOffset(element.position.x.toInt(), element.position.y.toInt()) }
+            .offset { IntOffset(element.position.x.toInt(), element.position.y.toInt()) }
             .size(width = element.width.dp, height = element.height.dp)
+            .graphicsLayer { rotationZ = element.rotationDeg }
             .pointerInput(element.id) {
                 detectDragGestures(onDragStart = { onTap() }) { change, dragAmount ->
                     change.consume()
@@ -109,14 +127,52 @@ private fun ElementView(
                 }
             }
             ShapeType.VIDEO -> {
-                // Thumbnail preview only; playback is wired up with a VideoView/ExoPlayer
-                // when the user taps the element in the full editor.
-                if (element.mediaUri != null) {
-                    AsyncImage(model = element.mediaUri, contentDescription = null, modifier = Modifier.fillMaxSize())
-                } else {
-                    Box(Modifier.fillMaxSize().background(Color(0xFF333333)))
+                Box(Modifier.fillMaxSize()) {
+                    if (element.mediaUri != null) {
+                        AsyncImage(model = element.mediaUri, contentDescription = null, modifier = Modifier.fillMaxSize())
+                    } else {
+                        Box(Modifier.fillMaxSize().background(Color(0xFF333333)))
+                    }
+                    Icon(
+                        Icons.Default.PlayCircle,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(36.dp)
+                            .clickable { showVideoDialog = true }
+                    )
+                }
+                if (showVideoDialog && element.mediaUri != null) {
+                    Dialog(onDismissRequest = { showVideoDialog = false }) {
+                        AndroidView(
+                            factory = { ctx ->
+                                VideoView(ctx).apply {
+                                    setVideoURI(Uri.parse(element.mediaUri))
+                                    setOnPreparedListener { it.start() }
+                                }
+                            },
+                            modifier = Modifier.size(320.dp, 220.dp)
+                        )
+                    }
                 }
             }
+        }
+
+        // Resize handle: only shown for the selected element, bottom-right corner.
+        if (selected) {
+            Box(
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(20.dp)
+                    .background(Color(0xFFF5B300), shape = androidx.compose.foundation.shape.CircleShape)
+                    .pointerInput(element.id) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            onResizeDrag(dragAmount)
+                        }
+                    }
+            )
         }
     }
 }
