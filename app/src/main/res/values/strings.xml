@@ -61,6 +61,7 @@
     <string name="container_list_title">الحاويات</string>
     <string name="container_name_hint">اسم الحاوية</string>
     <string name="container_description_hint">وصف الحاوية</string>
+    <string name="container_details_hint">تفاصيل الحاوية</string>
     <string name="container_step_next">التالي</string>
     <string name="container_step_back">السابق</string>
     <string name="container_step_create">إنشاء</string>
@@ -78,4 +79,14 @@
     <string name="container_progress_uploading">جاري الرفع...</string>
     <string name="container_progress_done">تم بنجاح!</string>
     <string name="container_progress_opening">جاري الفتح...</string>
+    <string name="container_customize">تخصيص</string>
+    <string name="container_delete">حذف</string>
+    <string name="container_rename">إعادة تسمية</string>
+    <string name="container_edit">تعديل الوصف</string>
+    <string name="container_edit_title">تعديل وصف الحاوية</string>
+    <string name="container_rename_title">إعادة تسمية الحاوية</string>
+    <string name="container_open_blog">فتح المدونة</string>
+    <string name="container_open_diagram">فتح المخطط</string>
+    <string name="container_delete_confirm_title">حذف الحاوية؟</string>
+    <string name="container_delete_confirm_body">لا يمكن التراجع عن هذا الإجراء.</string>
 </resources>
