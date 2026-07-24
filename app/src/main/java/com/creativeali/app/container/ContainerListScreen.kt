@@ -28,6 +28,7 @@ private enum class ListMode { LIST, CREATE, DETAIL }
  * السابقة تحت حاويات (مجلدات/مشاريع) مستقلة، كل واحدة منها لها اسمها
  * ووصفها ووسامها وأيقونتها الخاصة.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContainerListScreen(viewModel: ContainerViewModel = viewModel()) {
     val containers by viewModel.containers.collectAsStateWithLifecycle()
