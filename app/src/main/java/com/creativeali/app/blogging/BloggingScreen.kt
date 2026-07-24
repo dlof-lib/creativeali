@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
  * save writes the entry to Room; the share icon exports the whole loop as a
  * `.dlofpkg` package (see [DlofPackage]).
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BloggingScreen(viewModel: BloggingViewModel = viewModel()) {
     val loop by viewModel.loop.collectAsStateWithLifecycle()
@@ -97,6 +98,7 @@ fun BloggingScreen(viewModel: BloggingViewModel = viewModel()) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EntryEditor(entry: DlofEntry, onSave: (DlofEntry) -> Unit, onCancel: () -> Unit) {
     var title by remember(entry.id) { mutableStateOf(entry.title) }
