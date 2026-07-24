@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
@@ -116,7 +117,7 @@ private fun ElementView(
             }
             ShapeType.TEXT -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(element.text.ifBlank { "نص" }, color = element.textColor)
+                    Text(element.text.ifBlank { "نص" }, color = element.textColor, fontSize = element.fontSizeSp.sp)
                 }
             }
             ShapeType.IMAGE -> {
