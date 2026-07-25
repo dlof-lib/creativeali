@@ -1,7 +1,6 @@
 package com.creativeali.app.dlof
 
 import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserFactory
 import java.io.StringReader
 import java.io.StringWriter
 
@@ -228,9 +227,13 @@ object DlofXmlCodec {
     }
 
     private fun newParser(xml: String): XmlPullParser {
-        val factory = XmlPullParserFactory.newInstance()
-        factory.isNamespaceAware = false
-        val parser = factory.newPullParser()
+        // نستخدم كائن kxml2 مباشرة بدل XmlPullParserFactory.newInstance():
+        // في android.jar الفعلي على الجهاز هذا يعمل تلقائيًا، لكن أثناء اختبارات
+        // الوحدة (JVM وليس جهاز حقيقي) تكون فئات org.xmlpull.v1.* في android.jar
+        // مجرد stubs، ومع isReturnDefaultValues=true فإن newInstance() يُرجع null
+        // بصمت بدل رمي استثناء، فيسبب NullPointerException عند أول استخدام له.
+        val parser: XmlPullParser = org.kxml2.io.KXmlParser()
+        parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
         parser.setInput(StringReader(xml))
         return parser
     }
