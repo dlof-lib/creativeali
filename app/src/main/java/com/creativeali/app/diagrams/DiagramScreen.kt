@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -67,30 +68,36 @@ fun DiagramScreen(diagramId: String = com.creativeali.app.diagrams.data.DEFAULT_
 
     val selected = diagram.elements.firstOrNull { it.id == selectedId }
 
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         // Toolbar: add shape / text / image / video / export
-        Row(
-            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Surface(
+            tonalElevation = 2.dp,
+            shadowElevation = 2.dp,
+            color = MaterialTheme.colorScheme.surface,
         ) {
-            AssistChip(onClick = { viewModel.save(DiagramElement(type = ShapeType.RECTANGLE)) },
-                label = { Text(stringResource(R.string.diagram_add_shape)) },
-                leadingIcon = { Icon(Icons.Default.CropSquare, contentDescription = null) })
-            AssistChip(onClick = { viewModel.save(DiagramElement(type = ShapeType.CIRCLE)) },
-                label = { Text("دائرة") }, leadingIcon = { Icon(Icons.Default.Circle, contentDescription = null) })
-            AssistChip(onClick = { viewModel.save(DiagramElement(type = ShapeType.LINE, height = 4f)) },
-                label = { Text("خط") }, leadingIcon = { Icon(Icons.Default.Remove, contentDescription = null) })
-            AssistChip(onClick = { viewModel.save(DiagramElement(type = ShapeType.TEXT, text = "نص جديد")) },
-                label = { Text(stringResource(R.string.diagram_add_text)) },
-                leadingIcon = { Icon(Icons.Default.TextFields, contentDescription = null) })
-            AssistChip(onClick = { imagePicker.launch("image/*") },
-                label = { Text(stringResource(R.string.diagram_add_image)) },
-                leadingIcon = { Icon(Icons.Default.Image, contentDescription = null) })
-            AssistChip(onClick = { videoPicker.launch("video/*") },
-                label = { Text(stringResource(R.string.diagram_add_video)) },
-                leadingIcon = { Icon(Icons.Default.Videocam, contentDescription = null) })
-            AssistChip(onClick = { exportLauncher.launch("${diagram.name}.diagrampkg") },
-                label = { Text("تصدير") }, leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) })
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                AssistChip(onClick = { viewModel.save(DiagramElement(type = ShapeType.RECTANGLE)) },
+                    label = { Text(stringResource(R.string.diagram_add_shape)) },
+                    leadingIcon = { Icon(Icons.Default.CropSquare, contentDescription = null) })
+                AssistChip(onClick = { viewModel.save(DiagramElement(type = ShapeType.CIRCLE)) },
+                    label = { Text("دائرة") }, leadingIcon = { Icon(Icons.Default.Circle, contentDescription = null) })
+                AssistChip(onClick = { viewModel.save(DiagramElement(type = ShapeType.LINE, height = 4f)) },
+                    label = { Text("خط") }, leadingIcon = { Icon(Icons.Default.Remove, contentDescription = null) })
+                AssistChip(onClick = { viewModel.save(DiagramElement(type = ShapeType.TEXT, text = "نص جديد")) },
+                    label = { Text(stringResource(R.string.diagram_add_text)) },
+                    leadingIcon = { Icon(Icons.Default.TextFields, contentDescription = null) })
+                AssistChip(onClick = { imagePicker.launch("image/*") },
+                    label = { Text(stringResource(R.string.diagram_add_image)) },
+                    leadingIcon = { Icon(Icons.Default.Image, contentDescription = null) })
+                AssistChip(onClick = { videoPicker.launch("video/*") },
+                    label = { Text(stringResource(R.string.diagram_add_video)) },
+                    leadingIcon = { Icon(Icons.Default.Videocam, contentDescription = null) })
+                AssistChip(onClick = { exportLauncher.launch("${diagram.name}.diagrampkg") },
+                    label = { Text("تصدير") }, leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) })
+            }
         }
 
         HorizontalDivider()
@@ -100,16 +107,16 @@ fun DiagramScreen(diagramId: String = com.creativeali.app.diagrams.data.DEFAULT_
             diagram = diagram,
             selectedId = selectedId,
             onSelect = { selectedId = it },
-            onMove = { id, delta ->
+            onMoveEnd = { id, totalDelta ->
                 diagram.elements.firstOrNull { it.id == id }?.let {
-                    it.position = Offset(it.position.x + delta.x, it.position.y + delta.y)
+                    it.position = Offset(it.position.x + totalDelta.x, it.position.y + totalDelta.y)
                     viewModel.save(it)
                 }
             },
-            onResize = { id, delta ->
+            onResizeEnd = { id, totalDelta ->
                 diagram.elements.firstOrNull { it.id == id }?.let {
-                    it.width = max(40f, it.width + delta.x)
-                    it.height = max(40f, it.height + delta.y)
+                    it.width = max(40f, it.width + totalDelta.x)
+                    it.height = max(40f, it.height + totalDelta.y)
                     viewModel.save(it)
                 }
             },
@@ -156,7 +163,12 @@ private fun PropertyPanel(
         Color(0xFF0F5C1E), Color(0xFF1E8A2E), Color(0xFF8DC63F),
         Color(0xFFF5B300), Color.White, Color.Black, Color(0xFFE53935), Color(0xFF1565C0)
     )
-    Column(Modifier.fillMaxWidth().padding(12.dp)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(12.dp)
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             AssistChip(onClick = onDuplicate,
                 label = { Text(stringResource(R.string.diagram_duplicate_element)) },
@@ -182,13 +194,13 @@ private fun PropertyPanel(
         }
 
         Text(stringResource(R.string.diagram_fill_color), style = MaterialTheme.typography.labelMedium)
-        SwatchRow(palette) { element.fillColor = it; onChanged() }
+        SwatchRow(palette, selected = element.fillColor) { element.fillColor = it; onChanged() }
 
         Text(stringResource(R.string.diagram_border_color), style = MaterialTheme.typography.labelMedium)
-        SwatchRow(palette) { element.borderColor = it; onChanged() }
+        SwatchRow(palette, selected = element.borderColor) { element.borderColor = it; onChanged() }
 
         Text(stringResource(R.string.diagram_text_color), style = MaterialTheme.typography.labelMedium)
-        SwatchRow(palette) { element.textColor = it; onChanged() }
+        SwatchRow(palette, selected = element.textColor) { element.textColor = it; onChanged() }
 
         var corner by remember(element.id) { mutableStateOf(element.cornerRadiusDp) }
         Text("${stringResource(R.string.diagram_corner_radius)}: ${corner.toInt()}dp")
@@ -205,14 +217,22 @@ private fun PropertyPanel(
 }
 
 @Composable
-private fun SwatchRow(colors: List<Color>, onPick: (Color) -> Unit) {
+private fun SwatchRow(colors: List<Color>, selected: Color, onPick: (Color) -> Unit) {
     Row(Modifier.horizontalScroll(rememberScrollState()).padding(vertical = 4.dp)) {
         colors.forEach { c ->
+            val isSelected = c == selected
             Box(
                 Modifier
                     .padding(4.dp)
-                    .size(28.dp)
+                    .size(if (isSelected) 32.dp else 28.dp)
                     .background(c, shape = androidx.compose.foundation.shape.CircleShape)
+                    .then(
+                        if (isSelected) Modifier.border(
+                            2.5.dp,
+                            MaterialTheme.colorScheme.primary,
+                            androidx.compose.foundation.shape.CircleShape
+                        ) else Modifier
+                    )
                     .clickable { onPick(c) }
             )
         }
