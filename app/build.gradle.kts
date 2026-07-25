@@ -269,6 +269,16 @@ dependencies {
     // -------------------------------------------------------------------
     // Testing
     // -------------------------------------------------------------------
+    // -------------------------------------------------------------------
+    // kxml2 — تطبيق حقيقي لـ XmlPullParser تستخدمه DlofXmlCodec مباشرة.
+    // لا نعتمد على XmlPullParserFactory.newInstance() لأن الصنف الذي توفره
+    // منصة أندرويد داخليًا (com.android.org.kxml2) غير متاح لتطبيقات الطرف
+    // الثالث، وفي android.jar المستخدم للتصريف والاختبارات هو مجرد stub
+    // يُرجع null بصمت (بسبب isReturnDefaultValues=true)، ما كان يسبب
+    // NullPointerException في اختبارات DlofXmlCodecTest. تضمين المكتبة هنا
+    // (implementation) يضمن سلوكًا متطابقًا على الجهاز الحقيقي وفي الاختبارات.
+    implementation("net.sf.kxml:kxml2:2.3.0")
+
     testImplementation("junit:junit:${Versions.JUNIT}")
     androidTestImplementation("androidx.test.ext:junit:${Versions.ANDROIDX_TEST_JUNIT}")
     androidTestImplementation("androidx.test.espresso:espresso-core:${Versions.ESPRESSO}")
