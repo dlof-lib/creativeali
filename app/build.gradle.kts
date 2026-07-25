@@ -6,15 +6,33 @@ plugins {
 
 android {
     namespace = "com.creativeali.app"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.creativeali.app"
-        minSdk = 24
-        targetSdk = 34
+        minSdk = 21
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
         vectorDrawables { useSupportLibrary = true }
+    }
+
+    // نسختان منفصلتان (APK لكل مجموعة إصدارات) لتغطية جميع إصدارات أندرويد:
+    //  - legacy: Android 5.0 (API 21) وما فوق — لأقدم الأجهزة
+    //  - modern: Android 8.0 (API 26) وما فوق — يستفيد من الأيقونة المتكيّفة وقنوات الإشعارات وغيرها
+    // كل flavor بينتج ملف APK مستقل باسمه (مثال: app-legacy-release.apk / app-modern-release.apk)
+    flavorDimensions += "version"
+    productFlavors {
+        create("legacy") {
+            dimension = "version"
+            minSdk = 21
+            versionNameSuffix = "-legacy"
+        }
+        create("modern") {
+            dimension = "version"
+            minSdk = 26
+            versionNameSuffix = "-modern"
+        }
     }
 
     buildTypes {
@@ -30,7 +48,7 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
 
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
     composeOptions { kotlinCompilerExtensionVersion = "1.5.14" }
 
     packaging {
