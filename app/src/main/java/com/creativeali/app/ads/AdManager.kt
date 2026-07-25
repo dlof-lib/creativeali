@@ -95,9 +95,11 @@ object AdManager {
     }
 }
 
-/** بانر إعلاني قابل للتضمين مباشرة في أي شاشة Compose. */
+/** بانر إعلاني قابل للتضمين مباشرة في أي شاشة Compose.
+ *  يعرض إعلانات الاختبار تلقائيًا في بنية Debug فقط، وإعلانات حقيقية
+ *  (AdUnits.Real) في بنية Release — دون أي تغيير مطلوب من المتصل. */
 @Composable
-fun AdBanner(modifier: Modifier = Modifier.fillMaxWidth(), isDebug: Boolean = true) {
+fun AdBanner(modifier: Modifier = Modifier.fillMaxWidth(), isDebug: Boolean = com.creativeali.app.BuildConfig.DEBUG) {
     AndroidView(
         modifier = modifier,
         factory = { context ->
