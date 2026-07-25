@@ -18,7 +18,7 @@ object AdUnits {
 
     /** ★ عدّل هذه القيم بمعرّفات AdMob الفعلية الخاصة بتطبيقك قبل النشر. */
     object Real {
-        const val BANNER = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
+        const val BANNER = "ca-app-pub-1525040025806904/4931989941"
         const val INTERSTITIAL = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
         const val REWARDED = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
         const val NATIVE = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
