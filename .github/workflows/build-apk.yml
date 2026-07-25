@@ -64,18 +64,22 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       generated_new: ${{ steps.status.outputs.generated_new }}
+    env:
+      # ملاحظة: لا يمكن استخدام secrets مباشرة داخل if:، لذا نحوّل الفحص
+      # إلى متغير env هنا (مسموح استخدام secrets داخل env:) ثم نقرأ منه في if
+      HAS_KEYSTORE_SECRET: ${{ secrets.KEYSTORE_BASE64 != '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Use existing keystore secret
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        if: env.HAS_KEYSTORE_SECRET == 'true'
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.keystore
           echo "GENERATED_NEW=false" >> "$GITHUB_ENV"
 
       - name: Generate brand-new keystore from scratch
-        if: ${{ secrets.KEYSTORE_BASE64 == '' }}
+        if: env.HAS_KEYSTORE_SECRET == 'false'
         run: |
           KEY_ALIAS="creativeali"
           KEYSTORE_PASSWORD="$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 24)"
@@ -97,6 +101,7 @@ jobs:
           } >> "$GITHUB_ENV"
           echo "GENERATED_NEW=true" >> "$GITHUB_ENV"
 
+          # يخفي كلمات السر من كل السجلات القادمة في هذا التشغيل
           echo "::add-mask::$KEYSTORE_PASSWORD"
           echo "::add-mask::$KEY_PASSWORD"
 
