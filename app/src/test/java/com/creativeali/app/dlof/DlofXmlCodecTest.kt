@@ -15,7 +15,7 @@ class DlofXmlCodecTest {
         doc.content.add(DlofContent.Qa(question = "ما عاصمة مصر؟", answer = "القاهرة", difficulty = "easy"))
 
         val xml = DlofXmlCodec.write(doc)
-        val reparsed = DlofXmlCodec.parse(xml)
+        val reparsed = requireNotNull(DlofXmlCodec.parse(xml)) { "DlofXmlCodec.parse returned null for qaItem round-trip" }
 
         assertEquals("سؤال تجريبي", reparsed.metadata.title)
         assertEquals(DlofDomain.EDUCATION, reparsed.metadata.domain)
@@ -35,7 +35,7 @@ class DlofXmlCodecTest {
                 durationSeconds = 1800, seriesTitle = "مسلسلي",
             )
         )
-        val reparsed = DlofXmlCodec.parse(DlofXmlCodec.write(doc))
+        val reparsed = requireNotNull(DlofXmlCodec.parse(DlofXmlCodec.write(doc))) { "DlofXmlCodec.parse returned null for episodeItem round-trip" }
         val ep = reparsed.content.first() as DlofContent.Episode
         assertEquals(1, ep.episodeNumber)
         assertEquals(2, ep.seasonNumber)
@@ -50,7 +50,7 @@ class DlofXmlCodecTest {
         doc.attachments.add(DlofAttachment(fileName = "cover.jpg", mimeType = "image/jpeg", kind = DlofAttachmentKind.IMAGE, uri = "media/images/cover.jpg"))
         doc.template = DlofTemplate(primaryColor = "#FF0000", layout = DlofTemplateLayout.CARD)
 
-        val reparsed = DlofXmlCodec.parse(DlofXmlCodec.write(doc))
+        val reparsed = requireNotNull(DlofXmlCodec.parse(DlofXmlCodec.write(doc))) { "DlofXmlCodec.parse returned null for attachments/template round-trip" }
         assertEquals(1, reparsed.attachments.size)
         assertEquals("cover.jpg", reparsed.attachments.first().fileName)
         assertEquals(DlofTemplateLayout.CARD, reparsed.template?.layout)
