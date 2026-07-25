@@ -6,13 +6,16 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,6 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -39,55 +44,94 @@ import kotlin.math.max
  * Free-form canvas where every [DiagramElement] can be dragged, resized
  * (bottom-right handle) and rotated (assigned via the property panel), and
  * when selected, edited through the property panel in [DiagramScreen].
+ *
+ * Dragging/resizing is tracked purely in local Compose state while the
+ * gesture is in progress (so the canvas stays perfectly smooth at 60fps)
+ * and is only committed — a single call to [onMoveEnd]/[onResizeEnd] — once
+ * the finger lifts. That single commit is what [DiagramScreen] persists to
+ * the database, instead of writing on every pixel of movement.
  */
 @Composable
 fun DiagramCanvas(
     diagram: Diagram,
     selectedId: String?,
     onSelect: (String?) -> Unit,
-    onMove: (String, Offset) -> Unit,
-    onResize: (String, Offset) -> Unit,
+    onMoveEnd: (String, Offset) -> Unit,
+    onResizeEnd: (String, Offset) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val gridDot = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.18f)
     Box(
         modifier
             .fillMaxSize()
-            .background(Color(0xFFF2F7F0))
-            .pointerInput(Unit) { detectDragGestures(onDragStart = { onSelect(null) }) { _, _ -> } }
+            .background(MaterialTheme.colorScheme.surface)
+            .drawDotGrid(gridDot)
+            .pointerInput(Unit) { detectTapGestures(onTap = { onSelect(null) }) }
     ) {
         diagram.elements.forEach { element ->
             ElementView(
                 element = element,
                 selected = element.id == selectedId,
                 onTap = { onSelect(element.id) },
-                onDrag = { delta -> onMove(element.id, delta) },
-                onResizeDrag = { delta -> onResize(element.id, delta) },
+                onDragEnd = { total -> onMoveEnd(element.id, total) },
+                onResizeEnd = { total -> onResizeEnd(element.id, total) },
             )
         }
     }
 }
+
+/** Subtle dot grid so the canvas reads as a real design surface rather than a blank rectangle. */
+private fun Modifier.drawDotGrid(dotColor: Color): Modifier = this.then(
+    Modifier.drawBehind {
+        val step = 24.dp.toPx()
+        val radius = 1.2.dp.toPx()
+        var y = 0f
+        while (y < size.height) {
+            var x = 0f
+            while (x < size.width) {
+                drawCircle(color = dotColor, radius = radius, center = Offset(x, y))
+                x += step
+            }
+            y += step
+        }
+    }
+)
 
 @Composable
 private fun ElementView(
     element: DiagramElement,
     selected: Boolean,
     onTap: () -> Unit,
-    onDrag: (Offset) -> Unit,
-    onResizeDrag: (Offset) -> Unit,
+    onDragEnd: (Offset) -> Unit,
+    onResizeEnd: (Offset) -> Unit,
 ) {
-    val borderColor = if (selected) Color(0xFFF5B300) else element.borderColor
+    val accent = MaterialTheme.colorScheme.secondary
+    val borderColor = if (selected) accent else element.borderColor
     val borderWidth = if (selected) max(element.borderWidthDp, 3f) else element.borderWidthDp
     var showVideoDialog by remember(element.id) { mutableStateOf(false) }
 
+    // Live, purely-local drag/resize preview — never touches the database mid-gesture.
+    var dragPreview by remember(element.id) { mutableStateOf(Offset.Zero) }
+    var resizePreview by remember(element.id) { mutableStateOf(Offset.Zero) }
+
+    val livePosition = element.position + dragPreview
+    val liveWidth = max(40f, element.width + resizePreview.x)
+    val liveHeight = max(40f, element.height + resizePreview.y)
+
     Box(
         modifier = Modifier
-            .offset { IntOffset(element.position.x.toInt(), element.position.y.toInt()) }
-            .size(width = element.width.dp, height = element.height.dp)
+            .offset { IntOffset(livePosition.x.toInt(), livePosition.y.toInt()) }
+            .size(width = liveWidth.dp, height = liveHeight.dp)
             .graphicsLayer { rotationZ = element.rotationDeg }
+            .then(if (selected) Modifier.shadow(6.dp, RoundedCornerOrCircleShape(element)) else Modifier)
             .pointerInput(element.id) {
-                detectDragGestures(onDragStart = { onTap() }) { change, dragAmount ->
+                detectDragGestures(
+                    onDragStart = { onTap() },
+                    onDragEnd = { onDragEnd(dragPreview); dragPreview = Offset.Zero },
+                    onDragCancel = { dragPreview = Offset.Zero },
+                ) { change, dragAmount ->
                     change.consume()
-                    onDrag(dragAmount)
+                    dragPreview += dragAmount
                 }
             }
     ) {
@@ -124,7 +168,7 @@ private fun ElementView(
                 if (element.mediaUri != null) {
                     AsyncImage(model = element.mediaUri, contentDescription = null, modifier = Modifier.fillMaxSize())
                 } else {
-                    Box(Modifier.fillMaxSize().background(Color(0xFFDDDDDD)))
+                    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant))
                 }
             }
             ShapeType.VIDEO -> {
@@ -132,7 +176,7 @@ private fun ElementView(
                     if (element.mediaUri != null) {
                         AsyncImage(model = element.mediaUri, contentDescription = null, modifier = Modifier.fillMaxSize())
                     } else {
-                        Box(Modifier.fillMaxSize().background(Color(0xFF333333)))
+                        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant))
                     }
                     Icon(
                         Icons.Default.PlayCircle,
@@ -165,15 +209,24 @@ private fun ElementView(
             Box(
                 Modifier
                     .align(Alignment.BottomEnd)
-                    .size(20.dp)
-                    .background(Color(0xFFF5B300), shape = androidx.compose.foundation.shape.CircleShape)
+                    .shadow(3.dp, CircleShape)
+                    .size(22.dp)
+                    .background(accent, shape = CircleShape)
                     .pointerInput(element.id) {
-                        detectDragGestures { change, dragAmount ->
+                        detectDragGestures(
+                            onDragEnd = { onResizeEnd(resizePreview); resizePreview = Offset.Zero },
+                            onDragCancel = { resizePreview = Offset.Zero },
+                        ) { change, dragAmount ->
                             change.consume()
-                            onResizeDrag(dragAmount)
+                            resizePreview += dragAmount
                         }
                     }
             )
         }
     }
 }
+
+/** Matches the resize-handle shadow to the element's own silhouette so it doesn't look boxy on circles. */
+private fun RoundedCornerOrCircleShape(element: DiagramElement) =
+    if (element.type == ShapeType.CIRCLE) CircleShape
+    else androidx.compose.foundation.shape.RoundedCornerShape(element.cornerRadiusDp.dp)
