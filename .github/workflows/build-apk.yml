@@ -75,18 +75,22 @@ jobs:
       - name: Use existing keystore secret
         if: env.HAS_KEYSTORE_SECRET == 'true'
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          mkdir -p signing
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > signing/release.keystore
+          file signing/release.keystore
+          ls -lh signing/release.keystore
           echo "GENERATED_NEW=false" >> "$GITHUB_ENV"
 
       - name: Generate brand-new keystore from scratch
         if: env.HAS_KEYSTORE_SECRET == 'false'
         run: |
+          mkdir -p signing
           KEY_ALIAS="creativeali"
           KEYSTORE_PASSWORD="$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 24)"
           KEY_PASSWORD="$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 24)"
 
           keytool -genkeypair -v \
-            -keystore release.keystore \
+            -keystore signing/release.keystore \
             -alias "$KEY_ALIAS" \
             -keyalg RSA -keysize 4096 \
             -validity 10950 \
@@ -111,15 +115,13 @@ jobs:
             echo "KEY_ALIAS=${KEY_ALIAS:-${{ secrets.KEY_ALIAS }}}"
             echo "KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD:-${{ secrets.KEYSTORE_PASSWORD }}}"
             echo "KEY_PASSWORD=${KEY_PASSWORD:-${{ secrets.KEY_PASSWORD }}}"
-          } > signing.env
+          } > signing/signing.env
 
       - name: Upload keystore + credentials as artifact (private to this run)
         uses: actions/upload-artifact@v4
         with:
           name: release-keystore-CONFIDENTIAL
-          path: |
-            release.keystore
-            signing.env
+          path: signing/
           retention-days: 7
 
       - id: status
