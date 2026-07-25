@@ -1,4 +1,17 @@
-name: Build Creative Ali APK
+# =============================================================================
+#  Build & Auto-Sign Creative Ali APK
+#  ---------------------------------------------------------------------------
+#  يبني نسختي التطبيق (legacy / modern) موقّعتين وجاهزتين للتثبيت مباشرة.
+#
+#  التوقيع:
+#   - إذا كان السر KEYSTORE_BASE64 موجودًا في المستودع → يُستخدم (يضمن ثبات
+#     التوقيع بين الإصدارات، وهو ما يتطلبه أندرويد لقبول التحديثات).
+#   - إذا لم يكن موجودًا → يُولَّد keystore جديد تلقائيًا بالكامل من الصفر
+#     (keytool)، يُستخدم للتوقيع فورًا، ثم يُرفع كـ artifact سرّي حتى يحفظه
+#     المستخدم ويضيفه لاحقًا كـ Secret فيصبح ثابتًا في كل مرة.
+# =============================================================================
+
+name: Build & Auto-Sign Creative Ali APK
 
 on:
   push:
@@ -7,29 +20,216 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: "17"
+  JAVA_DISTRIBUTION: "temurin"
+  GRADLE_VERSION: "8.7"
+
 jobs:
-  build:
+  verify:
+    name: Lint & Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: '17'
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.7'
+          gradle-version: ${{ env.GRADLE_VERSION }}
 
-      - name: Build debug APK
-        run: gradle assembleDebug --stacktrace
+      - name: Run Android Lint
+        run: gradle lintLegacyDebug lintModernDebug --stacktrace
+        continue-on-error: true
 
-      - name: Upload APK artifact
+      - name: Run unit tests
+        run: gradle testLegacyDebugUnitTest testModernDebugUnitTest --stacktrace
+
+  prepare-signing:
+    name: Prepare Signing Key
+    needs: verify
+    runs-on: ubuntu-latest
+    outputs:
+      generated_new: ${{ steps.status.outputs.generated_new }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use existing keystore secret
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          echo "GENERATED_NEW=false" >> "$GITHUB_ENV"
+
+      - name: Generate brand-new keystore from scratch
+        if: ${{ secrets.KEYSTORE_BASE64 == '' }}
+        run: |
+          KEY_ALIAS="creativeali"
+          KEYSTORE_PASSWORD="$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 24)"
+          KEY_PASSWORD="$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 24)"
+
+          keytool -genkeypair -v \
+            -keystore release.keystore \
+            -alias "$KEY_ALIAS" \
+            -keyalg RSA -keysize 4096 \
+            -validity 10950 \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -keypass "$KEY_PASSWORD" \
+            -dname "CN=Creative Ali, OU=Mobile, O=Creative Ali, L=Unknown, ST=Unknown, C=US"
+
+          {
+            echo "KEY_ALIAS=$KEY_ALIAS"
+            echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+            echo "KEY_PASSWORD=$KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+          echo "GENERATED_NEW=true" >> "$GITHUB_ENV"
+
+          echo "::add-mask::$KEYSTORE_PASSWORD"
+          echo "::add-mask::$KEY_PASSWORD"
+
+      - name: Write signing metadata for later jobs
+        run: |
+          {
+            echo "KEY_ALIAS=${KEY_ALIAS:-${{ secrets.KEY_ALIAS }}}"
+            echo "KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD:-${{ secrets.KEYSTORE_PASSWORD }}}"
+            echo "KEY_PASSWORD=${KEY_PASSWORD:-${{ secrets.KEY_PASSWORD }}}"
+          } > signing.env
+
+      - name: Upload keystore + credentials as artifact (private to this run)
         uses: actions/upload-artifact@v4
         with:
-          name: creative-ali-debug-apk
-          path: app/build/outputs/apk/**/debug/*.apk
+          name: release-keystore-CONFIDENTIAL
+          path: |
+            release.keystore
+            signing.env
+          retention-days: 7
+
+      - id: status
+        run: echo "generated_new=${GENERATED_NEW:-false}" >> "$GITHUB_OUTPUT"
+
+      - name: Notify if a brand-new key was generated
+        if: env.GENERATED_NEW == 'true'
+        run: |
+          {
+            echo "## ⚠️ تم توليد مفتاح توقيع جديد من الصفر"
+            echo "لم يوجد \`KEYSTORE_BASE64\` كسر محفوظ، لذا تم إنشاء keystore جديد لهذا التشغيل فقط."
+            echo ""
+            echo "**لضمان ثبات نفس التوقيع في كل التحديثات القادمة:**"
+            echo "1. حمّل الملف \`release-keystore-CONFIDENTIAL\` من هذا الـ run."
+            echo "2. شغّل: \`base64 -w0 release.keystore\` وانسخ الناتج."
+            echo "3. أضفه كسر باسم \`KEYSTORE_BASE64\` في Settings → Secrets → Actions."
+            echo "4. أضف أيضًا \`KEY_ALIAS\`، \`KEYSTORE_PASSWORD\`، \`KEY_PASSWORD\` من ملف \`signing.env\`."
+            echo "5. احذف الـ artifact بعدها من الـ run (يحتوي أسرارًا حساسة)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  build-signed:
+    name: Build & Sign ${{ matrix.flavor }} Release APK
+    needs: prepare-signing
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [ legacy, modern ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download keystore from previous job
+        uses: actions/download-artifact@v4
+        with:
+          name: release-keystore-CONFIDENTIAL
+          path: signing
+
+      - name: Load signing credentials into env
+        run: |
+          set -a
+          source signing/signing.env
+          set +a
+          {
+            echo "KEYSTORE_PATH=${{ github.workspace }}/signing/release.keystore"
+            echo "KEY_ALIAS=$KEY_ALIAS"
+            echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+            echo "KEY_PASSWORD=$KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+          echo "::add-mask::$KEYSTORE_PASSWORD"
+          echo "::add-mask::$KEY_PASSWORD"
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Build signed ${{ matrix.flavor }} release APK
+        run: >
+          gradle assemble${{ matrix.flavor == 'legacy' && 'Legacy' || 'Modern' }}Release
+          --stacktrace --info
+
+      - name: Locate signed APK
+        id: locate
+        run: |
+          APK_PATH=$(find app/build/outputs/apk/${{ matrix.flavor }}/release -name "*.apk" | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "::error::لم يتم العثور على أي ملف APK لِـ ${{ matrix.flavor }}/release"
+            exit 1
+          fi
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+          echo "apk_size=$(du -h "$APK_PATH" | cut -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Verify APK signature
+        run: |
+          BUILD_TOOLS=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)
+          "$ANDROID_HOME/build-tools/$BUILD_TOOLS/apksigner" verify --print-certs \
+            "${{ steps.locate.outputs.apk_path }}"
+
+      - name: Upload signed ${{ matrix.flavor }} APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: creative-ali-${{ matrix.flavor }}-release-signed
+          path: ${{ steps.locate.outputs.apk_path }}
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
+
+      - name: Add job summary
+        run: |
+          {
+            echo "### 🔐 ${{ matrix.flavor }} — Signed Release APK"
+            echo "- **Path:** \`${{ steps.locate.outputs.apk_path }}\`"
+            echo "- **Size:** ${{ steps.locate.outputs.apk_size }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  summary:
+    name: Build Summary
+    needs: [ build-signed, prepare-signing ]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Final status
+        run: |
+          if [ "${{ needs.build-signed.result }}" = "success" ]; then
+            echo "✅ تم بناء وتوقيع نسختي legacy و modern بنجاح." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "❌ فشل البناء أو التوقيع، راجع سجلات job 'build-signed'." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "${{ needs.prepare-signing.outputs.generated_new }}" = "true" ]; then
+            echo "⚠️ ذكّر نفسك: احفظ الـ keystore الجديد كسر KEYSTORE_BASE64 الآن قبل أن تنساه." >> "$GITHUB_STEP_SUMMARY"
+          fi
