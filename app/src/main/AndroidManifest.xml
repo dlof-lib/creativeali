@@ -16,10 +16,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CreativeAli">
 
-        <!-- ★ AdMob: معرّف اختبار رسمي من Google — استبدله بمعرّف تطبيقك الفعلي قبل النشر -->
+        <!-- ★ AdMob: معرّف التطبيق الحقيقي من حساب AdMob الخاص بالمطوّر -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-1525040025806904~3726719481" />
 
         <activity
             android:name=".MainActivity"
